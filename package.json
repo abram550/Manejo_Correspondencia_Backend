@@ -1,0 +1,30 @@
+{
+  "name": "manejo_corespondencia",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "dev": "nodemon src/server.ts --exec ts-node"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "nodemon": "^3.1.7",
+    "typescript": "^5.6.2"
+  },
+  "dependencies": {
+    "@types/morgan": "^1.9.9",
+    "@types/sequelize": "^4.28.20",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "morgan": "^1.10.0",
+    "mysql2": "^3.11.3",
+    "sequelize": "^6.37.3",
+    "ts-node": "^10.9.2"
+  }
+}

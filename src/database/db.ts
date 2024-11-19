@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize');
 
-const DB_NAME = 'Manejo_Correspondencia';
+const DB_NAME = 'Manejo_Correspondencia2';
 
 const DB_USER = 'root';
 
@@ -23,7 +23,7 @@ export const database = new Sequelize(
 
 
 async function generateDb() {
-    await database.sync({ force: false })
+    await database.sync({ force: true })
     console.log('Base de datos y tablas creada');
 }
 

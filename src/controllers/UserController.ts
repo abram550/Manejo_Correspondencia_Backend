@@ -1,11 +1,8 @@
 import { Request, Response } from 'express';
 import { User, UserI } from '../models/User';
-import { UserType } from '../models/UserType';
-import { UserUserType } from '../models/UserUserType'; // Nueva tabla intermedia
-import bcrypt from 'bcryptjs';
 
 export class UserController {
-    // Test method to check the connection
+    // Método de prueba
     public async test(req: Request, res: Response): Promise<void> {
         try {
             res.send('Hello, test method for User');
@@ -14,18 +11,11 @@ export class UserController {
         }
     }
 
-    // Get all users
+    // Obtener todos los usuarios
     public async getAllUsers(req: Request, res: Response): Promise<void> {
         try {
             const users: UserI[] = await User.findAll({
-                include: [
-                    {
-                        model: UserType, // Modelo relacionado
-                        as: 'userType', // Alias de la asociación
-                        attributes: ['description'], // Campos a incluir
-                    },
-                ],
-                attributes: { exclude: ['userTypeId'] }, // Excluir userTypeId
+                attributes: { exclude: ['password'] }, // Excluir la contraseña de los resultados
             });
             res.status(200).json({ users });
         } catch (error) {
@@ -33,23 +23,17 @@ export class UserController {
             res.status(500).json({ msg: 'Internal error' });
         }
     }
-    // Get a single user by ID
+
+    // Obtener un usuario por ID
     public async getOneUser(req: Request, res: Response): Promise<void> {
-        const { id: idParam } = req.params;
-    
+        const { id } = req.params;
+
         try {
             const user: UserI | null = await User.findOne({
-                where: { id: parseInt(idParam) },
-                include: [
-                    {
-                        model: UserType,
-                        as: 'userType',
-                        attributes: ['description'],
-                    },
-                ],
-                attributes: { exclude: ['userTypeId'] },
+                where: { id: parseInt(id) },
+                attributes: { exclude: ['password'] }, // Excluir la contraseña
             });
-    
+
             if (user) {
                 res.status(200).json({ user });
             } else {
@@ -61,18 +45,17 @@ export class UserController {
         }
     }
 
-    // Create a new user
+    // Crear un nuevo usuario
     public async createUser(req: Request, res: Response): Promise<void> {
         const { name, address, email, phone, password, avatar } = req.body;
 
         try {
-            const hashedPassword = await bcrypt.hash(password, 10);
             const user = await User.create({
                 name,
                 address,
                 email,
                 phone,
-                password: hashedPassword,
+                password, // El hook `beforeCreate` se encargará de hashear la contraseña
                 avatar,
             });
             res.status(201).json({ user });
@@ -82,27 +65,28 @@ export class UserController {
         }
     }
 
-    // Update an existing user
+    // Actualizar un usuario existente
     public async updateUser(req: Request, res: Response): Promise<void> {
-        const { id: pk } = req.params;
-        const { name, address, email, phone, userTypeId, password, avatar } = req.body;
+        const { id } = req.params;
+        const { name, address, email, phone, password, avatar } = req.body;
 
         try {
-            const existingUser: UserI | null = await User.findByPk(pk);
+            const existingUser: UserI | null = await User.findByPk(id);
 
             if (!existingUser) {
                 res.status(404).json({ msg: "The User does not exist" });
             } else {
-                let updatedFields: any = { name, address, email, phone, userTypeId, avatar };
-                
-                // If password is provided, hash it before updating
+                let updatedFields: Partial<UserI> = { name, address, email, phone, avatar };
+
+                // Si se proporciona una nueva contraseña, incluirla en los campos actualizados
                 if (password) {
-                    const hashedPassword = await bcrypt.hash(password, 10);
-                    updatedFields.password = hashedPassword; // Hash the password before updating
+                    updatedFields.password = password; // El hook `beforeUpdate` manejará el hasheo
                 }
 
-                await User.update(updatedFields, { where: { id: pk } });
-                const user: UserI | null = await User.findByPk(pk);
+                await User.update(updatedFields, { where: { id: parseInt(id) } });
+                const user: UserI | null = await User.findByPk(id, {
+                    attributes: { exclude: ['password'] }, // Excluir la contraseña
+                });
                 res.status(200).json({ user });
             }
         } catch (error) {
@@ -111,66 +95,21 @@ export class UserController {
         }
     }
 
-    // Delete a user
+    // Eliminar un usuario
     public async deleteUser(req: Request, res: Response): Promise<void> {
-        const { id: pk } = req.params;
+        const { id } = req.params;
 
         try {
-            const existingUser: UserI | null = await User.findByPk(pk);
+            const existingUser: UserI | null = await User.findByPk(id);
             if (!existingUser) {
                 res.status(404).json({ msg: "The User does not exist" });
             } else {
-                await User.destroy({ where: { id: pk } });
+                await User.destroy({ where: { id: parseInt(id) } });
                 res.status(200).json({ msg: "User Deleted" });
             }
         } catch (error) {
             console.error('Error deleting user:', error);
             res.status(500).json({ msg: "Error deleting user" });
-        }
-    }
-
-    // Get all users (alternative method)
-    public async getAllUsersAlternative(req: Request, res: Response): Promise<void> { 
-        try {
-            const users: UserI[] = await User.findAll({
-                include: {
-                    model: UserType,
-                    as: 'userType',
-                    attributes: ['description'] // Show only the description
-                },
-                attributes: { exclude: ['userTypeId'] } // Exclude user type ID
-            });
-    
-            res.status(200).json(users); // Return the array directly
-        } catch (error) {
-            console.error('Error in getAllUsersAlternative:', error);
-            res.status(500).json({ msg: "Internal error" });
-        }
-    }
-    
-    // Get a user by ID (alternative method)
-    public async getUserById(req: Request, res: Response): Promise<void> {
-        const { id: idParam } = req.params;
-    
-        try {
-            const user: UserI | null = await User.findOne({
-                where: { id: parseInt(idParam) },
-                include: {
-                    model: UserType,
-                    as: 'userType',
-                    attributes: ['description']
-                },
-                attributes: { exclude: ['userTypeId'] }
-            });
-    
-            if (user) {
-                res.status(200).json(user); // Return the object directly
-            } else {
-                res.status(404).json({ msg: "The User does not exist" });
-            }
-        } catch (error) {
-            console.error('Error in getUserById:', error);
-            res.status(500).json({ msg: "Internal error" });
         }
     }
 }

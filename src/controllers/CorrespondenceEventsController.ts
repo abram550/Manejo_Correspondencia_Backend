@@ -1,68 +1,81 @@
-import { Request, Response } from 'express';
-import { CorrespondenceEvents } from '../models/CorrespondenceEvents';
+import { Request, Response } from 'express'; // Import Express request and response objects
+import { CorrespondenceEvents } from '../models/CorrespondenceEvents'; // Import the CorrespondenceEvents model
 
 /**
- * Controller for managing correspondence event operations
+ * Controller for managing operations related to correspondence events.
+ * Provides methods for CRUD operations and event retrieval.
  */
 export class CorrespondenceEventsController {
     /**
-     * Test method for the correspondence events
-     * @param req - Express request object
-     * @param res - Express response object
+     * Test method to check if the controller is working.
+     * @param req - Express request object, representing the incoming HTTP request.
+     * @param res - Express response object, used to send a response.
      */
     public async test(req: Request, res: Response): Promise<void> {
         try {
-            res.send('Hello, test method for CorrespondenceEvents'); // Respond with a test message
+            // Send a simple response to verify the controller is functioning
+            res.send('Hello, test method for CorrespondenceEvents');
         } catch (error) {
-            res.status(500).json({ msg: "Internal error" }); // Respond with an internal server error message
+            // Handle errors by responding with a 500 status code
+            res.status(500).json({ msg: "Internal error" });
         }
     }
 
     /**
-     * Retrieve all correspondence events
-     * @param req - Express request object
-     * @param res - Express response object
+     * Retrieves all correspondence events from the database.
+     * @param req - Express request object.
+     * @param res - Express response object.
      */
     public async getAllEvents(req: Request, res: Response): Promise<void> {
         try {
-            const events = await CorrespondenceEvents.findAll(); // Fetch all correspondence events from the database
-            res.status(200).json({ events }); // Respond with a success status and the events
+            // Fetch all records from the CorrespondenceEvents table
+            const events = await CorrespondenceEvents.findAll();
+            // Send the retrieved events with a 200 status code
+            res.status(200).json({ events });
         } catch (error) {
-            console.error('Error in getAllEvents:', error); // Log the error
-            res.status(500).json({ msg: "Internal error" }); // Respond with an internal server error message
+            // Log the error for debugging purposes
+            console.error('Error in getAllEvents:', error);
+            // Respond with a 500 status code indicating an internal server error
+            res.status(500).json({ msg: "Internal error" });
         }
     }
 
     /**
-     * Retrieve a single correspondence event by its ID
-     * @param req - Express request object
-     * @param res - Express response object
+     * Retrieves a single correspondence event by its unique ID.
+     * @param req - Express request object.
+     * @param res - Express response object.
      */
     public async getOneEvent(req: Request, res: Response): Promise<void> {
-        const { id: idParam } = req.params; // Extract the event ID from the request parameters
+        const { id: idParam } = req.params; // Extract the `id` parameter from the request URL
 
         try {
-            const event = await CorrespondenceEvents.findOne({ where: { id: idParam } }); // Fetch the event with the specified ID
+            // Fetch a single event matching the provided ID
+            const event = await CorrespondenceEvents.findOne({ where: { id: idParam } });
 
             if (event) {
-                res.status(200).json({ event }); // Respond with the found event
+                // If the event exists, respond with the event details
+                res.status(200).json({ event });
             } else {
-                res.status(404).json({ msg: "The event does not exist" }); // Respond with a not found message
+                // If no event is found, respond with a 404 status code
+                res.status(404).json({ msg: "The event does not exist" });
             }
         } catch (error) {
-            res.status(500).json({ msg: "Internal error" }); // Respond with an internal server error message
+            // Handle server errors with a 500 status code
+            res.status(500).json({ msg: "Internal error" });
         }
     }
 
     /**
-     * Create a new correspondence event
-     * @param req - Express request object
-     * @param res - Express response object
+     * Creates a new correspondence event in the database.
+     * @param req - Express request object containing the event data in the body.
+     * @param res - Express response object.
      */
     public async createEvent(req: Request, res: Response): Promise<void> {
-        const { correspondenceId, branchId, employeeId, correspondenceStatusId, eventDate, description } = req.body; // Extract event details from the request body
+        // Extract the required fields from the request body
+        const { correspondenceId, branchId, employeeId, correspondenceStatusId, eventDate, description } = req.body;
 
         try {
+            // Create a new record in the CorrespondenceEvents table
             const event = await CorrespondenceEvents.create({
                 correspondenceId,
                 branchId,
@@ -70,28 +83,33 @@ export class CorrespondenceEventsController {
                 correspondenceStatusId,
                 eventDate,
                 description,
-            }); // Create a new correspondence event in the database
-            res.status(201).json({ event }); // Respond with a created status and the new event
+            });
+            // Respond with the newly created event and a 201 status code
+            res.status(201).json({ event });
         } catch (error) {
-            res.status(500).json({ msg: "Error creating event" }); // Respond with an error message
+            // Handle errors during creation with a 500 status code
+            res.status(500).json({ msg: "Error creating event" });
         }
     }
 
     /**
-     * Update an existing correspondence event
-     * @param req - Express request object
-     * @param res - Express response object
+     * Updates an existing correspondence event by its ID.
+     * @param req - Express request object containing the ID in the URL and updated data in the body.
+     * @param res - Express response object.
      */
     public async updateEvent(req: Request, res: Response): Promise<void> {
-        const { id: pk } = req.params; // Extract the event ID from the request parameters
-        const { correspondenceId, branchId, employeeId, correspondenceStatusId, eventDate, description } = req.body; // Extract updated event details from the request body
+        const { id: pk } = req.params; // Extract the `id` parameter from the request URL
+        const { correspondenceId, branchId, employeeId, correspondenceStatusId, eventDate, description } = req.body;
 
         try {
-            const eventExists = await CorrespondenceEvents.findByPk(pk); // Check if the event exists
+            // Check if the event exists in the database
+            const eventExists = await CorrespondenceEvents.findByPk(pk);
 
             if (!eventExists) {
-                res.status(404).json({ msg: "The event does not exist" }); // Respond with a not found message
+                // If no event is found, respond with a 404 status code
+                res.status(404).json({ msg: "The event does not exist" });
             } else {
+                // Update the existing event with the provided data
                 await CorrespondenceEvents.update({
                     correspondenceId,
                     branchId,
@@ -99,35 +117,43 @@ export class CorrespondenceEventsController {
                     correspondenceStatusId,
                     eventDate,
                     description,
-                }, { where: { id: pk } }); // Update the event details in the database
+                }, { where: { id: pk } });
 
-                const updatedEvent = await CorrespondenceEvents.findByPk(pk); // Retrieve the updated event
-                res.status(200).json({ event: updatedEvent }); // Respond with the updated event
+                // Retrieve the updated event details
+                const updatedEvent = await CorrespondenceEvents.findByPk(pk);
+                // Respond with the updated event
+                res.status(200).json({ event: updatedEvent });
             }
         } catch (error) {
-            res.status(500).json({ msg: "Error updating event" }); // Respond with an error message
+            // Handle errors during update with a 500 status code
+            res.status(500).json({ msg: "Error updating event" });
         }
     }
 
     /**
-     * Delete a correspondence event by its ID
-     * @param req - Express request object
-     * @param res - Express response object
+     * Deletes a correspondence event by its ID.
+     * @param req - Express request object containing the ID in the URL.
+     * @param res - Express response object.
      */
     public async deleteEvent(req: Request, res: Response): Promise<void> {
-        const { id: pk } = req.params; // Extract the event ID from the request parameters
+        const { id: pk } = req.params; // Extract the `id` parameter from the request URL
 
         try {
-            const eventExists = await CorrespondenceEvents.findByPk(pk); // Check if the event exists
+            // Check if the event exists in the database
+            const eventExists = await CorrespondenceEvents.findByPk(pk);
 
             if (!eventExists) {
-                res.status(404).json({ msg: "The event does not exist" }); // Respond with a not found message
+                // If no event is found, respond with a 404 status code
+                res.status(404).json({ msg: "The event does not exist" });
             } else {
-                await CorrespondenceEvents.destroy({ where: { id: pk } }); // Delete the event from the database
-                res.status(200).json({ msg: "Event Deleted" }); // Respond with a success message
+                // Delete the event from the database
+                await CorrespondenceEvents.destroy({ where: { id: pk } });
+                // Respond with a success message and a 200 status code
+                res.status(200).json({ msg: "Event Deleted" });
             }
         } catch (error) {
-            res.status(500).json({ msg: "Error deleting event" }); // Respond with an error message
+            // Handle errors during deletion with a 500 status code
+            res.status(500).json({ msg: "Error deleting event" });
         }
     }
 }

@@ -1,3 +1,5 @@
+import { fa } from "@faker-js/faker/.";
+
 const Sequelize = require('sequelize');
 
 const DB_NAME = 'Manejo_Correspondencia2';
@@ -23,7 +25,7 @@ export const database = new Sequelize(
 
 
 async function generateDb() {
-    await database.sync({ force: true })
+    await database.sync({ force: false })
     console.log('Base de datos y tablas creada');
 }
 

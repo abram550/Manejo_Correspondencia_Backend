@@ -27,10 +27,6 @@ export class TransportRoutes {
         // Route to delete a transport by ID
         app.route("/transports/:id").delete(this.transportController.deleteTransport);
 
-        // Alternative route to get all transports (modified)
-        app.route("/transportss").get(this.transportController.getAllTransports); 
-        
-        // Alternative route to get a transport by ID (modified)
-        app.route("/transportss/:id").get(this.transportController.getTransportById); 
+       
     }
 }

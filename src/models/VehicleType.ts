@@ -25,7 +25,10 @@ VehicleType.init(
     description: {
       type: DataTypes.STRING,
       allowNull: false,
-    },
+      validate: {
+        notEmpty: true, 
+      },
+    },    
     status: {
       type: DataTypes.BOOLEAN,
       allowNull: false,

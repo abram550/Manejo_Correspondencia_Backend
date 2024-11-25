@@ -8,17 +8,21 @@ import { Branch } from '../models/Branch';
 import { Transport } from '../models/Transport';
 
 /**
- * CorrespondenceController class that handles requests related to correspondence.
+ * Handles operations related to correspondence records.
+ * This controller includes methods for CRUD operations
+ * and includes associated data where necessary.
  */
 export class CorrespondenceController {
     /**
-     * Retrieve all correspondence records from the database, including associated data.
-     * @param req - The request object.
-     * @param res - The response object.
+     * Fetches all correspondence records along with associated data.
+     * Includes sender, recipient, employee, correspondence type, state,
+     * origin and destination branches, and transport information.
+     * 
+     * @param req - The HTTP request object.
+     * @param res - The HTTP response object.
      */
     public async getAllCorrespondence(req: Request, res: Response): Promise<void> {
         try {
-            // Fetch all correspondence including associated user, employee, and correspondence types
             const correspondences: CorrespondenceI[] = await Correspondence.findAll({
                 include: [
                     { model: User, as: "sender" },
@@ -33,21 +37,23 @@ export class CorrespondenceController {
             });
             res.status(200).json({ correspondences });
         } catch (error) {
-            console.error('Error in getAllCorrespondence:', error);
-            res.status(500).json({ msg: "Internal Error" });
+            console.error('Error fetching all correspondence:', error);
+            res.status(500).json({ msg: "Internal server error while fetching correspondences" });
         }
     }
 
     /**
-     * Retrieve a single correspondence record by ID, including associated data.
-     * @param req - The request object.
-     * @param res - The response object.
+     * Fetches a single correspondence record by its unique ID.
+     * Also includes associated data such as sender, recipient,
+     * and correspondence type information.
+     * 
+     * @param req - The HTTP request object with the correspondence ID in params.
+     * @param res - The HTTP response object.
      */
     public async getOneCorrespondence(req: Request, res: Response): Promise<void> {
         const { id } = req.params;
 
         try {
-            // Find correspondence by ID including associated data
             const correspondence: CorrespondenceI | null = await Correspondence.findOne({
                 where: { id },
                 include: [
@@ -64,24 +70,29 @@ export class CorrespondenceController {
             if (correspondence) {
                 res.status(200).json({ correspondence });
             } else {
-                res.status(404).json({ msg: "The correspondence does not exist" });
+                res.status(404).json({ msg: "Correspondence not found" });
             }
         } catch (error) {
-            console.error('Error in getOneCorrespondence:', error);
-            res.status(500).json({ msg: "Internal Error" });
+            console.error('Error fetching correspondence by ID:', error);
+            res.status(500).json({ msg: "Internal server error while fetching correspondence" });
         }
     }
 
     /**
-     * Create a new correspondence record in the database.
-     * @param req - The request object containing correspondence data.
-     * @param res - The response object.
+     * Creates a new correspondence record in the database.
+     * Accepts correspondence details in the request body.
+     * 
+     * @param req - The HTTP request object containing correspondence data in the body.
+     * @param res - The HTTP response object.
      */
     public async createCorrespondence(req: Request, res: Response): Promise<void> {
-        const { senderId, recipientId, employeeId, correspondenceTypeId, correspondenceStateId, originBranchId, destinationBranchId, transportId, sendDate, deliveryDate, description } = req.body;
+        const {
+            senderId, recipientId, employeeId, correspondenceTypeId,
+            correspondenceStateId, originBranchId, destinationBranchId,
+            transportId, sendDate, deliveryDate, description
+        } = req.body;
 
         try {
-            // Create a new correspondence
             const newCorrespondence: CorrespondenceI = await Correspondence.create({
                 senderId,
                 recipientId,
@@ -97,28 +108,33 @@ export class CorrespondenceController {
             });
             res.status(201).json({ newCorrespondence });
         } catch (error) {
-            console.error('Error in createCorrespondence:', error);
-            res.status(500).json({ msg: "Error creating the correspondence" });
+            console.error('Error creating correspondence:', error);
+            res.status(500).json({ msg: "Internal server error while creating correspondence" });
         }
     }
 
     /**
-     * Update an existing correspondence record by ID.
-     * @param req - The request object containing the correspondence ID and data to update.
-     * @param res - The response object.
+     * Updates an existing correspondence record by ID.
+     * Accepts correspondence details and ID from request.
+     * 
+     * @param req - The HTTP request object containing ID in params and data in body.
+     * @param res - The HTTP response object.
      */
     public async updateCorrespondence(req: Request, res: Response): Promise<void> {
         const { id } = req.params;
-        const { senderId, recipientId, employeeId, correspondenceTypeId, correspondenceStateId, originBranchId, destinationBranchId, transportId, sendDate, deliveryDate, description } = req.body;
+        const {
+            senderId, recipientId, employeeId, correspondenceTypeId,
+            correspondenceStateId, originBranchId, destinationBranchId,
+            transportId, sendDate, deliveryDate, description
+        } = req.body;
 
         try {
             const existingCorrespondence: CorrespondenceI | null = await Correspondence.findByPk(id);
             if (!existingCorrespondence) {
-                res.status(404).json({ msg: "The correspondence does not exist" });
+                res.status(404).json({ msg: "Correspondence not found" });
                 return;
             }
 
-            // Update the correspondence's details
             await Correspondence.update({
                 senderId,
                 recipientId,
@@ -132,18 +148,20 @@ export class CorrespondenceController {
                 deliveryDate,
                 description
             }, { where: { id } });
+
             const updatedCorrespondence: CorrespondenceI | null = await Correspondence.findByPk(id);
             res.status(200).json({ correspondence: updatedCorrespondence });
         } catch (error) {
-            console.error('Error in updateCorrespondence:', error);
-            res.status(500).json({ msg: "Error updating the correspondence" });
+            console.error('Error updating correspondence:', error);
+            res.status(500).json({ msg: "Internal server error while updating correspondence" });
         }
     }
 
     /**
-     * Delete a correspondence record by ID.
-     * @param req - The request object containing the correspondence ID.
-     * @param res - The response object.
+     * Deletes a correspondence record from the database by its ID.
+     * 
+     * @param req - The HTTP request object containing correspondence ID in params.
+     * @param res - The HTTP response object.
      */
     public async deleteCorrespondence(req: Request, res: Response): Promise<void> {
         const { id } = req.params;
@@ -151,16 +169,15 @@ export class CorrespondenceController {
         try {
             const existingCorrespondence: CorrespondenceI | null = await Correspondence.findByPk(id);
             if (!existingCorrespondence) {
-                res.status(404).json({ msg: "The correspondence does not exist" });
+                res.status(404).json({ msg: "Correspondence not found" });
                 return;
             }
 
-            // Delete the correspondence
             await Correspondence.destroy({ where: { id } });
-            res.status(200).json({ msg: "Correspondence Deleted" });
+            res.status(200).json({ msg: "Correspondence successfully deleted" });
         } catch (error) {
-            console.error('Error in deleteCorrespondence:', error);
-            res.status(500).json({ msg: "Error deleting the correspondence" });
+            console.error('Error deleting correspondence:', error);
+            res.status(500).json({ msg: "Internal server error while deleting correspondence" });
         }
     }
 }

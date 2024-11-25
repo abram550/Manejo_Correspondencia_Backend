@@ -35,7 +35,10 @@ Transport.init(
     capacityKg: {
       type: DataTypes.INTEGER,
       allowNull: false,
-    },
+      validate: {
+        min: 0,
+      },
+    },    
     vehicleTypeId: {
       type: DataTypes.INTEGER,
       allowNull: false,

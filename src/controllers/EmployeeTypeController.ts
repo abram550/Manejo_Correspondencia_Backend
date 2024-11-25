@@ -25,7 +25,9 @@ export class EmployeeTypeController {
      */
     public async getAllEmployeeTypes(req: Request, res: Response): Promise<void> {
         try {
-            const employeeTypes: EmployeeTypeI[] = await EmployeeType.findAll();
+            const employeeTypes: EmployeeTypeI[] = await EmployeeType.findAll({
+                attributes: { exclude: ['status'] }, // Excluir el campo 'status' si no quieres mostrarlo
+            });
             res.status(200).json({ employeeTypes });
         } catch (error) {
             console.error('Error in getAllEmployeeTypes:', error);
@@ -39,15 +41,18 @@ export class EmployeeTypeController {
      * @param res - The response object.
      */
     public async getOneEmployeeType(req: Request, res: Response): Promise<void> {
-        const { id: idParam } = req.params;
+        const { id } = req.params;
 
         try {
-            const employeeType: EmployeeTypeI | null = await EmployeeType.findOne({ where: { id: parseInt(idParam) } });
+            const employeeType: EmployeeTypeI | null = await EmployeeType.findOne({
+                where: { id: parseInt(id) },
+                attributes: { exclude: ['status'] }, // Excluir el campo 'status'
+            });
 
             if (employeeType) {
                 res.status(200).json({ employeeType });
             } else {
-                res.status(404).json({ msg: "Employee type does not exist" });
+                res.status(404).json({ msg: 'Employee type does not exist' });
             }
         } catch (error) {
             console.error('Error in getOneEmployeeType:', error);
@@ -61,10 +66,13 @@ export class EmployeeTypeController {
      * @param res - The response object.
      */
     public async createEmployeeType(req: Request, res: Response): Promise<void> {
-        const { position } = req.body;
+        const { jobTitle, status } = req.body;
 
         try {
-            const employeeType: EmployeeTypeI = await EmployeeType.create({ position });
+            const employeeType: EmployeeTypeI = await EmployeeType.create({
+                jobTitle,
+                status, // El campo status se incluirá si se pasa en la solicitud
+            });
             res.status(201).json({ employeeType });
         } catch (error) {
             console.error('Error creating employee type:', error);
@@ -78,17 +86,24 @@ export class EmployeeTypeController {
      * @param res - The response object.
      */
     public async updateEmployeeType(req: Request, res: Response): Promise<void> {
-        const { id: pk } = req.params;
-        const { position } = req.body;
+        const { id } = req.params;
+        const { jobTitle, status } = req.body;
 
         try {
-            const existingEmployeeType: EmployeeTypeI | null = await EmployeeType.findByPk(pk);
+            const existingEmployeeType: EmployeeTypeI | null = await EmployeeType.findByPk(id);
 
             if (!existingEmployeeType) {
                 res.status(404).json({ msg: "Employee type does not exist" });
             } else {
-                await EmployeeType.update({ position }, { where: { id: pk } });
-                const employeeType: EmployeeTypeI | null = await EmployeeType.findByPk(pk);
+                let updatedFields: Partial<EmployeeTypeI> = { jobTitle };
+
+                // Si se proporciona un nuevo status, incluirlo en los campos actualizados
+                if (status !== undefined) {
+                    updatedFields.status = status;
+                }
+
+                await EmployeeType.update(updatedFields, { where: { id: parseInt(id) } });
+                const employeeType: EmployeeTypeI | null = await EmployeeType.findByPk(id);
                 res.status(200).json({ employeeType });
             }
         } catch (error) {
@@ -103,14 +118,14 @@ export class EmployeeTypeController {
      * @param res - The response object.
      */
     public async deleteEmployeeType(req: Request, res: Response): Promise<void> {
-        const { id: pk } = req.params;
+        const { id } = req.params;
 
         try {
-            const existingEmployeeType: EmployeeTypeI | null = await EmployeeType.findByPk(pk);
+            const existingEmployeeType: EmployeeTypeI | null = await EmployeeType.findByPk(id);
             if (!existingEmployeeType) {
                 res.status(404).json({ msg: "Employee type does not exist" });
             } else {
-                await EmployeeType.destroy({ where: { id: pk } });
+                await EmployeeType.destroy({ where: { id: parseInt(id) } });
                 res.status(200).json({ msg: "Employee type deleted" });
             }
         } catch (error) {
@@ -127,7 +142,7 @@ export class EmployeeTypeController {
     public async getAllEmployeeTypesDirect(req: Request, res: Response): Promise<void> {
         try {
             const employeeTypes: EmployeeTypeI[] = await EmployeeType.findAll();
-            res.status(200).json(employeeTypes); // Changed to return an array directly
+            res.status(200).json(employeeTypes); // Devuelve un array directamente
         } catch (error) {
             console.error('Error in getAllEmployeeTypesDirect:', error);
             res.status(500).json({ msg: "Internal error" });
@@ -140,13 +155,13 @@ export class EmployeeTypeController {
      * @param res - The response object.
      */
     public async getEmployeeTypeById(req: Request, res: Response): Promise<void> {
-        const { id: idParam } = req.params;
+        const { id } = req.params;
 
         try {
-            const employeeType: EmployeeTypeI | null = await EmployeeType.findOne({ where: { id: parseInt(idParam) } });
+            const employeeType: EmployeeTypeI | null = await EmployeeType.findOne({ where: { id: parseInt(id) } });
 
             if (employeeType) {
-                res.status(200).json(employeeType); // Changed to return the object directly
+                res.status(200).json(employeeType); // Devuelve el objeto directamente
             } else {
                 res.status(404).json({ msg: "Employee type does not exist" });
             }
